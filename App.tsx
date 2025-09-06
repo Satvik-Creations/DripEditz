@@ -1,11 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import Header from './components/Header.tsx';
-import ImageUploader from './components/ImageUploader.tsx';
-import PromptInput from './components/PromptInput.tsx';
-import ResultDisplay from './components/ResultDisplay.tsx';
-import ErrorAlert from './components/ErrorAlert.tsx';
-import { editImage } from './services/geminiService.ts';
-import type { GeneratedContentPart, ImageFile } from './types.ts';
+import Header from './components/Header';
+import ImageUploader from './components/ImageUploader';
+import PromptInput from './components/PromptInput';
+import ResultDisplay from './components/ResultDisplay';
+import ErrorAlert from './components/ErrorAlert';
+import { editImage } from './services/geminiService';
+import type { GeneratedContentPart, ImageFile } from './types';
 
 function App() {
   const [image, setImage] = useState<ImageFile | null>(null);
