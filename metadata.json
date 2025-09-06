@@ -1,0 +1,5 @@
+{
+  "name": "DripEditz",
+  "description": "An AI-powered image editor using Gemini's Nano Banana model. Upload an image, describe your edits, and let the AI bring your vision to life with style.",
+  "requestFramePermissions": []
+}
