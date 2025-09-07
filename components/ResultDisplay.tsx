@@ -14,20 +14,16 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
     try {
       const response = await fetch(imageUrl, { mode: 'cors' });
       const blob = await response.blob();
-      // Try using FileReader for maximum compatibility
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        const a = document.createElement('a');
-        a.href = reader.result as string;
-        a.download = `DripEditz_result_${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-      reader.readAsDataURL(blob);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `DripEditz_result_${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      // fallback: open in new tab
-      window.open(imageUrl, '_blank');
+      alert('Failed to download image. Please try again.');
     }
   };
 
@@ -56,20 +52,15 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
                             alt={`Generated content ${index}`} 
                             className="w-full h-full object-contain rounded-lg" 
                         />
-            <a
-              href={part.imageUrl}
-              download={`DripEditz_result_${Date.now()}.png`}
-              className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-              aria-label="Download image"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </a>
-                {/* Mobile app hint */}
-                <p className="text-xs text-gray-400 mt-2 text-center">If the download button doesn't work, long-press the image to save it.</p>
+                        <button
+                            onClick={() => downloadImage(part.imageUrl!)}
+                            className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all opacity-0 group-hover:opacity-100"
+                            aria-label="Download image"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </button>
                     </div>
                 )}
                 {part.text && (
