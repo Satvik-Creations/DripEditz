@@ -56,15 +56,16 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
                             alt={`Generated content ${index}`} 
                             className="w-full h-full object-contain rounded-lg" 
                         />
-            <button
-              onClick={() => downloadImage(part.imageUrl!)}
+            <a
+              href={part.imageUrl}
+              download={`DripEditz_result_${Date.now()}.png`}
               className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               aria-label="Download image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-            </button>
+            </a>
                     </div>
                 )}
                 {part.text && (
