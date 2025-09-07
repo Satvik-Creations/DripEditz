@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { GeneratedContentPart } from '../types';
 import Loader from './Loader';
 
@@ -9,27 +9,9 @@ interface ResultDisplayProps {
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => {
   const hasContent = content.length > 0;
-  const [imgurLinks, setImgurLinks] = useState<(string | null)[]>([]);
 
-  const downloadImage = async (imageUrl: string) => {
-    try {
-      const response = await fetch(imageUrl, { mode: 'cors' });
-      const blob = await response.blob();
-      // Try using FileReader for maximum compatibility
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        const a = document.createElement('a');
-        a.href = reader.result as string;
-        a.download = `DripEditz_result_${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-      reader.readAsDataURL(blob);
-    } catch (error) {
-      // fallback: open in new tab
-      window.open(imageUrl, '_blank');
-    }
+  const downloadImage = (imageUrl: string) => {
+    window.open(imageUrl, '_blank');
   };
 
   return (
@@ -51,64 +33,22 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
             {content.map((part, index) => (
               <React.Fragment key={index}>
                 {part.imageUrl && (
-                  <div className="relative w-full h-full">
-                    <img
-                      src={imgurLinks[index] || part.imageUrl}
-                      alt={`Generated content ${index}`}
-                      className="w-full h-full object-contain rounded-lg"
-                      onLoad={async (e) => {
-                        // Only upload if not already uploaded
-                        if (!imgurLinks[index] && part.imageUrl.startsWith('data:')) {
-                          try {
-                            const base64 = part.imageUrl.split(',')[1];
-                            const res = await fetch('https://api.imgur.com/3/image', {
-                              method: 'POST',
-                              headers: {
-                                Authorization: 'Client-ID 2b7e1e7e0e6b1e7', // Public demo client ID
-                                Accept: 'application/json',
-                              },
-                              body: JSON.stringify({ image: base64, type: 'base64' }),
-                            });
-                            const data = await res.json();
-                            if (data.success && data.data && data.data.link) {
-                              setImgurLinks((prev) => {
-                                const updated = [...prev];
-                                updated[index] = data.data.link;
-                                return updated;
-                              });
-                            }
-                          } catch (err) {
-                            // ignore
-                          }
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={async () => {
-                        const url = imgurLinks[index] || part.imageUrl;
-                        try {
-                          const response = await fetch(url);
-                          const blob = await response.blob();
-                          const blobUrl = window.URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = blobUrl;
-                          a.download = `DripEditz_result_${Date.now()}.png`;
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                          window.URL.revokeObjectURL(blobUrl);
-                        } catch (e) {
-                          window.open(url, '_blank');
-                        }
-                      }}
-                      className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                      aria-label="Download image"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    </button>
-                  </div>
+                    <div className="relative w-full h-full">
+                        <img 
+                            src={part.imageUrl} 
+                            alt={`Generated content ${index}`} 
+                            className="w-full h-full object-contain rounded-lg" 
+                        />
+            <button
+              onClick={() => downloadImage(part.imageUrl!)}
+              className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+              aria-label="Download image"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </button>
+                    </div>
                 )}
                 {part.text && (
                   <p className="text-gray-300 text-sm bg-black border border-gray-800 p-3 rounded-md mt-4">{part.text}</p>
