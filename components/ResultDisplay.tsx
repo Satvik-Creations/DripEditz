@@ -110,8 +110,6 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
                     </button>
                   </div>
                 )}
-                    </div>
-                )}
                 {part.text && (
                   <p className="text-gray-300 text-sm bg-black border border-gray-800 p-3 rounded-md mt-4">{part.text}</p>
                 )}
