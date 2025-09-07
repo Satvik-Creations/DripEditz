@@ -56,16 +56,45 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
                             alt={`Generated content ${index}`} 
                             className="w-full h-full object-contain rounded-lg" 
                         />
-            <a
-              href={part.imageUrl}
-              download={`DripEditz_result_${Date.now()}.png`}
+            <button
+              onClick={() => {
+                // If data URL, convert to Blob and download
+                const dataUrl = part.imageUrl!;
+                if (dataUrl.startsWith('data:')) {
+                  const arr = dataUrl.split(',');
+                  const mime = arr[0].match(/:(.*?);/)[1];
+                  const bstr = atob(arr[1]);
+                  let n = bstr.length;
+                  const u8arr = new Uint8Array(n);
+                  while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                  }
+                  const blob = new Blob([u8arr], { type: mime });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `DripEditz_result_${Date.now()}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  window.URL.revokeObjectURL(url);
+                } else {
+                  // fallback for direct links
+                  const a = document.createElement('a');
+                  a.href = part.imageUrl!;
+                  a.download = `DripEditz_result_${Date.now()}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }
+              }}
               className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               aria-label="Download image"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-            </a>
+            </button>
                     </div>
                 )}
                 {part.text && (
