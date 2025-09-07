@@ -14,16 +14,20 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
     try {
       const response = await fetch(imageUrl, { mode: 'cors' });
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `DripEditz_result_${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      // Try using FileReader for maximum compatibility
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        const a = document.createElement('a');
+        a.href = reader.result as string;
+        a.download = `DripEditz_result_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+      reader.readAsDataURL(blob);
     } catch (error) {
-      alert('Failed to download image. Please try again.');
+      // fallback: open in new tab
+      window.open(imageUrl, '_blank');
     }
   };
 
