@@ -10,25 +10,8 @@ interface ResultDisplayProps {
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => {
   const hasContent = content.length > 0;
 
-  const downloadImage = async (imageUrl: string) => {
-    try {
-      const response = await fetch(imageUrl, { mode: 'cors' });
-      const blob = await response.blob();
-      // Try using FileReader for maximum compatibility
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        const a = document.createElement('a');
-        a.href = reader.result as string;
-        a.download = `DripEditz_result_${Date.now()}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-      reader.readAsDataURL(blob);
-    } catch (error) {
-      // fallback: open in new tab
-      window.open(imageUrl, '_blank');
-    }
+  const downloadImage = (imageUrl: string) => {
+    window.open(imageUrl, '_blank');
   };
 
   return (
