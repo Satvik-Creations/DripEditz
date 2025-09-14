@@ -13,7 +13,7 @@ export const editImage = async (
     }
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image-preview',
+      model: 'gemini-2.5-flash-preview-image',
       contents: {
         parts: [
           {
