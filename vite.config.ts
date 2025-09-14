@@ -1,19 +1,24 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import path from 'node:path';
+import { fileURLToPath } from 'url';
+import { defineConfig, loadEnv } from 'vite';
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    // Expose the dev server on all network interfaces, useful for testing on other devices
-    host: true,
-  },
-  preview: {
-    // Expose the preview server on all network interfaces for deployment platforms like Render
-    host: true,
-    // Use the PORT environment variable provided by Render, with a fallback
-    port: Number(process.env.PORT) || 10000,
-    // Allow requests from Render's hostname to fix deployment issue
-    allowedHosts: ['dripeditz.onrender.com'],
-  },
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, '.'),
+        }
+      },
+      preview: {
+        allowedHosts: ["dripeditz.onrender.com"]
+      }
+    };
 });

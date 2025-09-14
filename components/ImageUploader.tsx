@@ -1,4 +1,3 @@
-
 import React, { useCallback, useRef } from 'react';
 import type { ImageFile } from '../types';
 
