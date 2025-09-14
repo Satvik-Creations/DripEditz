@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
 import PromptInput from './components/PromptInput';
@@ -13,31 +14,12 @@ function App() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContentPart[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [cooldown, setCooldown] = useState<number>(0);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (cooldown > 0) {
-      setError(`You've exceeded your API quota. Please try again in ${cooldown} seconds.`);
-      timer = setInterval(() => {
-        setCooldown((prev) => prev - 1);
-      }, 1000);
-    } else {
-        // Clear error only if it's the quota message
-        if (error && error.includes("exceeded your API quota")) {
-            setError(null);
-        }
-    }
-    return () => clearInterval(timer);
-  }, [cooldown, error]);
-
 
   const handleImageSelect = useCallback((imageFile: ImageFile | null) => {
     setImage(imageFile);
     // Clear previous results when a new image is selected
     setGeneratedContent([]);
     setError(null);
-    setCooldown(0);
   }, []);
   
   const handleGenerate = useCallback(async () => {
@@ -45,7 +27,6 @@ function App() {
       setError("Please upload an image and provide an edit description.");
       return;
     }
-    if (cooldown > 0) return;
 
     setIsLoading(true);
     setError(null);
@@ -56,19 +37,14 @@ function App() {
       setGeneratedContent(result);
     } catch (e) {
       if (e instanceof Error) {
-        if (e.message.startsWith('QUOTA_EXCEEDED')) {
-          const delaySeconds = parseInt(e.message.split('|')[1], 10) || 60;
-          setCooldown(delaySeconds);
-        } else {
-          setError(e.message);
-        }
+        setError(e.message);
       } else {
         setError("An unexpected error occurred.");
       }
     } finally {
       setIsLoading(false);
     }
-  }, [image, prompt, cooldown]);
+  }, [image, prompt]);
 
   const isButtonDisabled = !image || !prompt.trim();
 
@@ -97,7 +73,6 @@ function App() {
                   onSubmit={handleGenerate} 
                   isLoading={isLoading}
                   isButtonDisabled={isButtonDisabled}
-                  cooldown={cooldown}
                 />
               </div>
             </div>
