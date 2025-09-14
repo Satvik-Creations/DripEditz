@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import type { GeneratedContentPart } from '../types';
 
@@ -53,9 +52,34 @@ export const editImage = async (
 
   } catch (error) {
     console.error("Error editing image:", error);
+    let errorMessage = "An unknown error occurred while editing the image.";
+
     if (error instanceof Error) {
-        throw new Error(`Failed to generate edit: ${error.message}`);
+        const errorString = error.toString();
+        
+        if (errorString.includes('429') || errorString.includes('RESOURCE_EXHAUSTED')) {
+            const retryMatch = errorString.match(/"retryDelay":\s*"(\d+)s"/);
+            if (retryMatch && retryMatch[1]) {
+                const delaySeconds = parseInt(retryMatch[1], 10);
+                // Custom error format to be caught by the UI
+                throw new Error(`QUOTA_EXCEEDED|${delaySeconds}`);
+            }
+            errorMessage = "You've exceeded your API quota. Please check your plan and billing details, or try again later.";
+        } else if (errorString.includes('API key not valid')) {
+            errorMessage = "Your API key is not valid. Please check your environment variables.";
+        } else if (errorString.includes('SAFETY')) {
+            errorMessage = "The response was blocked due to safety settings. Please try a different prompt.";
+        } else if (error.message) {
+            // Try to find a user-facing message in the error
+            const match = error.message.match(/\[\d{3} \w+\] (.*)/);
+            if (match && match[1]) {
+                errorMessage = `API Error: ${match[1]}`;
+            } else {
+                errorMessage = `Failed to generate edit: ${error.message}`;
+            }
+        }
     }
-    throw new Error("An unknown error occurred while editing the image.");
+    
+    throw new Error(errorMessage);
   }
 };
