@@ -13,5 +13,7 @@ export default defineConfig({
     host: true,
     // Use the PORT environment variable provided by Render, with a fallback
     port: Number(process.env.PORT) || 10000,
+    // Allow requests from Render's hostname to fix deployment issue
+    allowedHosts: ['dripeditz.onrender.com'],
   },
 });
