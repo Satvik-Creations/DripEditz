@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import type { GeneratedContentPart } from '../types';
 
@@ -30,7 +29,33 @@ export const editImage = async (
       },
     });
 
-    const parts = response.candidates?.[0]?.content?.parts || [];
+    // Check for explicit prompt blocking first.
+    if (response.promptFeedback?.blockReason) {
+      throw new Error(
+        `Your request was blocked for safety reasons (${response.promptFeedback.blockReason}). Please adjust your prompt or image.`
+      );
+    }
+    
+    const candidate = response.candidates?.[0];
+
+    // If there are no candidates, it's likely a response-level safety block or other issue.
+    if (!candidate) {
+      throw new Error("The AI did not provide a response. This could be due to safety filters blocking the output. Please try modifying your prompt.");
+    }
+    
+    // Check if the generation was stopped due to safety.
+    if (candidate.finishReason === 'SAFETY') {
+         throw new Error(`The AI stopped generating because the response was considered unsafe. Please adjust your prompt.`);
+    }
+    
+    // Check for other non-successful finish reasons.
+    if (candidate.finishReason && candidate.finishReason !== 'STOP' && candidate.finishReason !== 'MAX_TOKENS') {
+         throw new Error(`The AI stopped generating for an unexpected reason: ${candidate.finishReason}. Please adjust your prompt.`);
+    }
+
+    const parts = candidate.content?.parts || [];
+    
+    // If there are no parts, it's the "no content" error, but now we've ruled out the most common safety issues.
     if (parts.length === 0) {
       throw new Error("The AI did not return any content. Try adjusting your prompt.");
     }
@@ -46,7 +71,7 @@ export const editImage = async (
     }).filter(part => part.text || part.imageUrl);
 
     if (generatedContent.length === 0) {
-        throw new Error("The AI response could not be processed. Please try again.");
+        throw new Error("The AI response could not be processed, even though content was received. Please try again.");
     }
 
     return generatedContent;
