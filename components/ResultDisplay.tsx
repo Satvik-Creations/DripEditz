@@ -44,29 +44,24 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, isLoading }) => 
         ) : (
           <div className="p-2 w-full h-full">
             {content.map((part, index) => (
-              <React.Fragment key={index}>
-                {part.imageUrl && (
-                    <div className="relative w-full h-full">
-                        <img 
-                            src={part.imageUrl} 
-                            alt={`Generated content ${index}`} 
-                            className="w-full h-full object-contain rounded-lg" 
-                        />
-                        <button
-                            onClick={() => downloadImage(part.imageUrl!)}
-                            className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all opacity-0 group-hover:opacity-100"
-                            aria-label="Download image"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                        </button>
-                    </div>
-                )}
-                {part.text && (
-                  <p className="text-gray-300 text-sm bg-black border border-gray-800 p-3 rounded-md mt-4">{part.text}</p>
-                )}
-              </React.Fragment>
+              part.imageUrl ? (
+                <div className="relative w-full h-full" key={index}>
+                  <img 
+                    src={part.imageUrl} 
+                    alt={`Generated content ${index}`} 
+                    className="w-full h-full object-contain rounded-lg" 
+                  />
+                  <button
+                    onClick={() => downloadImage(part.imageUrl!)}
+                    className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all opacity-0 group-hover:opacity-100"
+                    aria-label="Download image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
+                </div>
+              ) : null
             ))}
           </div>
         )}
