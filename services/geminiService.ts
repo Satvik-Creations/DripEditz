@@ -53,11 +53,13 @@ export const editImage = async (
     }
 
     const data = await response.json();
+    // Log the full response for debugging
+    console.log('OpenRouter API response:', data);
 
     // Parse OpenRouter response
     const choices = data.choices?.[0];
     if (!choices || !choices.message?.content) {
-      throw new Error("No content returned from OpenRouter.");
+      throw new Error("No content returned from OpenRouter. See console for full response.");
     }
 
     // Parse content for images/text
