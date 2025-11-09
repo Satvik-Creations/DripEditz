@@ -1,86 +1,50 @@
-import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import type { GeneratedContentPart } from '../types';
 
+// This client-side service now proxies requests to a server endpoint at /api/edit.
+// The server holds the real Google API key and calls the Gemini SDK.
 export const editImage = async (
   base64ImageData: string,
   mimeType: string,
   prompt: string
 ): Promise<GeneratedContentPart[]> => {
   try {
-    if (!process.env.API_KEY) {
-      throw new Error("API_KEY environment variable not set.");
-    }
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image-preview',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64ImageData,
-              mimeType: mimeType,
-            },
-          },
-          { text: prompt },
-        ],
-      },
-      config: {
-        responseModalities: [Modality.IMAGE, Modality.TEXT],
-      },
+    const resp = await fetch('/api/edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: base64ImageData, mimeType, prompt }),
     });
 
-    // Check for explicit prompt blocking first.
-    if (response.promptFeedback?.blockReason) {
-      throw new Error(
-        `Your request was blocked for safety reasons (${response.promptFeedback.blockReason}). Please adjust your prompt or image.`
-      );
-    }
-    
-    const candidate = response.candidates?.[0];
-
-    // If there are no candidates, it's likely a response-level safety block or other issue.
-    if (!candidate) {
-      throw new Error("The AI did not provide a response. This could be due to safety filters blocking the output. Please try modifying your prompt.");
-    }
-    
-    // Check if the generation was stopped due to safety.
-    if (candidate.finishReason === 'SAFETY') {
-         throw new Error(`The AI stopped generating because the response was considered unsafe. Please adjust your prompt.`);
-    }
-    
-    // Check for other non-successful finish reasons.
-    if (candidate.finishReason && candidate.finishReason !== 'STOP' && candidate.finishReason !== 'MAX_TOKENS') {
-         throw new Error(`The AI stopped generating for an unexpected reason: ${candidate.finishReason}. Please adjust your prompt.`);
+    if (!resp.ok) {
+      // Try to get a helpful error body
+      let text = await resp.text();
+      try {
+        const json = JSON.parse(text);
+        text = json.error || JSON.stringify(json);
+      } catch (e) {}
+      throw new Error(`Server error (${resp.status}): ${text}`);
     }
 
-    const parts = candidate.content?.parts || [];
-    
-    // If there are no parts, it's the "no content" error, but now we've ruled out the most common safety issues.
-    if (parts.length === 0) {
-      throw new Error("The AI did not return any content. Try adjusting your prompt.");
+    const json = await resp.json();
+    const parts = json.parts || [];
+
+    if (!Array.isArray(parts) || parts.length === 0) {
+      throw new Error('The server returned no generated content. Try again or check server logs.');
     }
-    
-    const generatedContent: GeneratedContentPart[] = parts.map(part => {
-      if (part.text) {
-        return { text: part.text };
-      } else if (part.inlineData) {
-        const imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-        return { imageUrl };
-      }
-      return {};
-    }).filter(part => part.text || part.imageUrl);
+
+    const generatedContent: GeneratedContentPart[] = parts.map((part: any) => {
+      if (part.text) return { text: part.text } as GeneratedContentPart;
+      if (part.inlineData) return { imageUrl: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` } as GeneratedContentPart;
+      return {} as GeneratedContentPart;
+    }).filter((p) => p.text || p.imageUrl);
 
     if (generatedContent.length === 0) {
-        throw new Error("The AI response could not be processed, even though content was received. Please try again.");
+      throw new Error('The response could not be processed into usable content.');
     }
 
     return generatedContent;
-
   } catch (error) {
-    console.error("Error editing image:", error);
-    if (error instanceof Error) {
-        throw new Error(`Failed to generate edit: ${error.message}`);
-    }
-    throw new Error("An unknown error occurred while editing the image.");
+    console.error('Error calling edit API:', error);
+    if (error instanceof Error) throw new Error(`Failed to generate edit: ${error.message}`);
+    throw new Error('An unknown error occurred while editing the image.');
   }
 };
